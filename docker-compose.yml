@@ -1,0 +1,17 @@
+# Need: sudo bash -c 'echo "nameserver 192.168.99.100" > /etc/resolver/docker'
+dnsmasq:
+  build: ./dnsmasq
+  net: example
+  ports:
+    - 192.168.99.100:53:53
+    - 192.168.99.100:53:53/udp
+  command: dnsmasq -u root --no-daemon --log-queries --address=/.docker/192.168.99.100
+
+nginx:
+  build: ./nginx
+  net: example
+  ports:
+    - 80:80
+  volumes:
+    - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+  command: nginx
