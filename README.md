@@ -38,12 +38,12 @@ Of course, you can alter those default if you wish.
 Usage by example
 ----------------
 
-### Let localhost resolve `docker` TLD on the docker-machine
+### Let localhost resolve `docker` TLD for the docker machine
 ```
 sudo bash -c 'echo "nameserver 192.168.99.100" > /etc/resolver/docker'
 ```
 
-### Create a custom docker network
+### Create a custom docker network, `example`
 
 ```
 $ docker network create example
@@ -95,7 +95,7 @@ dnsmasq won't reload /etc/hosts automatically. You need let the dnsmasq process 
 ```
 docker kill -s HUP dockerdnsproxy_dnsmasq_1
 ```
-,
+or
 ```
 docker-compose restart dnsmasq
 ```
