@@ -75,7 +75,7 @@ Attaching to dockerdnsproxy_dnsmasq_out_1, dockerdnsproxy_dnsmasq_in_1, dockerdn
 
 ### Test!!
 
-Enter `app1.example.00` in your browser or `curl http://app1.example.00`.
+Enter `http://app1.example.00` in your browser or `curl http://app1.example.00`.
 
 [![https://gyazo.com/75100cc61960cf330f50748ad47cf5a2](https://i.gyazo.com/75100cc61960cf330f50748ad47cf5a2.png)](https://gyazo.com/75100cc61960cf330f50748ad47cf5a2)
 
