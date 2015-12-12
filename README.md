@@ -1,21 +1,22 @@
 docker-dns-proxy
 ================
-app1.example.docker:80 -> (dnsmasq, nginx) -> app1 container in "example" custom docker 1.9 network
+app1.example.00:80 -> (dnsmasq, nginx) -> `app1.example` container in "00" custom docker 1.9 network
 
 ```
---- docker machine ------------------
------- net: example -----------------
- [app1] [app2]
+--- docker machine --------------------------
+------ net: 00 ------------------------------
+ [app1.example], [app2.example] ...
    ^
-   | http://app1.example/ (e.g. 172.19.0.2)
+   | http://app1.example.00/ (e.g. 172.19.0.2)
    |
- [nginx] ------> [dnsmasq]
-- :80 ----------- :53 --------------
-   ^               ^
-   | http://app1.example.docker/ (192.168.99.100)
-   |               |
----- localhost ----------------------
- [browser] <-> [/etc/resolver/docker]
+   |              /etc/hosts    --address=/.00/192.168.99.100
+ [nginx] ------> [dnsmasq_in]  [dnsmaq_out]
+- :80 ----------- :5353 ---------- :53 ------ expose port
+   ^                                ^
+   | http://app1.example.00/ (192.168.99.100)
+   |                                |
+---- localhost ------------------------------
+ [browser] <---------> [/etc/resolver/docker]
 ```
 
 
@@ -29,8 +30,8 @@ Prerequisites
 Assumptions
 -----------
 - A docker-machine running on `192.168.99.100`
-- You use docker custom network named `example`
-- Use `.docker` as TLD
+- You use docker custom network named `00`
+- Use `.00` as the TLD
 
 Of course, you can alter those default if you wish.
 
@@ -38,22 +39,22 @@ Of course, you can alter those default if you wish.
 Usage by example
 ----------------
 
-### Let localhost resolve `docker` TLD for the docker machine
+### Let localhost resolve `.00` TLD for the docker machine
 ```
-sudo bash -c 'echo "nameserver 192.168.99.100" > /etc/resolver/docker'
-```
-
-### Create a custom docker network, `example`
-
-```
-$ docker network create example
+sudo bash -c 'echo "nameserver 192.168.99.100" > /etc/resolver/00'
 ```
 
-### Run an app container
+### Create a custom docker network, `00`
 
-Run python SimpleHTTPServer for example as `app1`.
 ```
-$ docker run -it --rm --net example --name app1 python:2 python -m SimpleHTTPServer 80
+$ docker network create 00
+```
+
+### Run an app container for test
+
+Run python SimpleHTTPServer for example as `app1.example`.
+```
+$ docker run -it --rm --net 00 --name app1.example python:2 python -m SimpleHTTPServer 80
 Serving HTTP on 0.0.0.0 port 80 ...
 ```
 
@@ -65,27 +66,18 @@ $ docker-compose build
 
 ```
 $ docker-compose --x-networking up
-Starting dockerdnsproxy_nginx_1
-Creating dockerdnsproxy_dnsmasq_1
-Attaching to dockerdnsproxy_nginx_1, dockerdnsproxy_dnsmasq_1
-nginx_1   | 2015/12/06 02:21:06 [notice] 1#0: using the "epoll" event method
-nginx_1   | 2015/12/06 02:21:06 [notice] 1#0: nginx/1.6.2
-nginx_1   | 2015/12/06 02:21:06 [notice] 1#0: OS: Linux 4.1.12-boot2docker
-nginx_1   | 2015/12/06 02:21:06 [notice] 1#0: getrlimit(RLIMIT_NOFILE): 1048576:1048576
-nginx_1   | 2015/12/06 02:21:06 [notice] 1#0: start worker processes
-nginx_1   | 2015/12/06 02:21:06 [notice] 1#0: start worker process 6
-dnsmasq_1 | dnsmasq: started, version 2.72 cachesize 150
-dnsmasq_1 | dnsmasq: compile time options: IPv6 GNU-getopt DBus i18n IDN DHCP DHCPv6 no-Lua TFTP conntrack ipset auth DNSSEC loop-detect
-dnsmasq_1 | dnsmasq: reading /etc/resolv.conf
-dnsmasq_1 | dnsmasq: using nameserver 10.0.1.1#53
-dnsmasq_1 | dnsmasq: read /etc/hosts - 9 addresses
+Starting dockerdnsproxy_dnsmasq_out_1
+Starting dockerdnsproxy_dnsmasq_in_1
+Recreating dockerdnsproxy_nginx_1
+Attaching to dockerdnsproxy_dnsmasq_out_1, dockerdnsproxy_dnsmasq_in_1, dockerdnsproxy_nginx_1
+...
 ```
 
 ### Test!!
 
-Enter `app1.example.docker` in your browser or `curl http://app1.example.docker`.
+Enter `app1.example.00` in your browser or `curl http://app1.example.00`.
 
-[![https://gyazo.com/a7bc10db80f027a2441d3d63b41161da](https://i.gyazo.com/a7bc10db80f027a2441d3d63b41161da.png)](https://gyazo.com/a7bc10db80f027a2441d3d63b41161da)
+[![https://gyazo.com/75100cc61960cf330f50748ad47cf5a2](https://i.gyazo.com/75100cc61960cf330f50748ad47cf5a2.png)](https://gyazo.com/75100cc61960cf330f50748ad47cf5a2)
 
 ### Reload dnsmasq
 
@@ -93,7 +85,7 @@ If you restart the app container or run another app container, you may get `502 
 dnsmasq won't reload /etc/hosts automatically. You need let the dnsmasq process to reload /etc/hosts.
 
 ```
-docker kill -s HUP dockerdnsproxy_dnsmasq_1
+docker kill -s HUP dockerdnsproxy_dnsmasq_in_1
 ```
 or
 ```
